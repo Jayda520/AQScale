@@ -1,202 +1,261 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>问卷</title>
-
-<style>
-body{
-  margin:0;
-  font-family:"Microsoft YaHei",Arial;
-  background:#ffffff;
-}
-#screen{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.card{
-  width:90%;
-  max-width:800px;
-  text-align:center;
-}
-.question{
-  font-size:22px;
-  line-height:1.8;
-  margin-bottom:25px;
-}
-.option{
-  border:1px solid #ddd;
-  border-radius:12px;
-  padding:14px;
-  margin:10px 0;
-  cursor:pointer;
-}
-.option:hover{
-  background:#f3f3f3;
-}
-input{display:none;}
-.error{color:red;}
-button{
-  padding:10px 20px;
-  border:none;
-  border-radius:10px;
-  background:#222;
-  color:#fff;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>问卷</title>
+  <style>
+    body{
+      margin:0; background:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+      color:#111;
+    }
+    #screen{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      box-sizing:border-box;
+    }
+    .card{
+      width:min(860px, 92vw);
+      text-align:center;
+      padding:10px;
+    }
+    .q{
+      font-size:22px;
+      line-height:1.8;
+      margin: 8px 0 18px;
+    }
+    .opt{
+      width:min(640px, 92vw);
+      margin:10px auto;
+      padding:14px 14px;
+      border:1px solid #e5e5e5;
+      border-radius:14px;
+      cursor:pointer;
+      text-align:left;
+      font-size:16px;
+      user-select:none;
+    }
+    .opt:hover{ border-color:#cfcfcf; background:#fafafa; }
+    .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    input[type="text"]{
+      padding:10px 12px; border:1px solid #ddd; border-radius:12px;
+      width:240px; text-align:center; font-size:14px;
+    }
+    button{
+      padding:10px 14px; border:0; border-radius:12px;
+      background:#111827; color:#fff; cursor:pointer; font-size:14px;
+    }
+    button.secondary{
+      background:#f3f4f6; color:#111; border:1px solid #e5e7eb;
+    }
+    .muted{ color:#666; font-size:14px; line-height:1.8; }
+    .err{ color:#b91c1c; font-size:14px; line-height:1.7; }
+  </style>
 </head>
-
 <body>
+  <div id="screen"></div>
 
-<div id="screen"></div>
+  <!-- ✅ 强制刷新缓存：v=1 你之后每次改文件把 1 改成 2/3/4 -->
+  <script src="questionnaire.js?v=1"></script>
 
-<!-- 题库 -->
-<script src="questionnaire.js"></script>
+  <script>
+    const screen = document.getElementById("screen");
 
-<script>
+    // 任何脚本错误直接显示在页面上（避免“空白”）
+    window.addEventListener("error", (e) => {
+      screen.innerHTML =
+        "<div class='card'><div class='err'>页面脚本报错：<br>" +
+        (e && e.message ? e.message : String(e)) +
+        "<br><br>常见原因：questionnaire.js 没加载（404/大小写/路径）或文件里有语法错误。</div></div>";
+    });
 
-// ========= 防止脚本空白 =========
-window.onerror = function(msg){
-  document.getElementById("screen").innerHTML =
-  "<div class='error'>脚本错误：<br>"+msg+
-  "<br>请确认 questionnaire.js 是否成功加载</div>";
-}
+    // 题库读取（兼容你之前可能的变量名）
+    const AQ =
+      window.AQ_AdultScale__TimeLineVariables ||
+      window.AQ_AdultScale_TimeLineVariables ||
+      null;
 
-// ========= 题库检测 =========
-const AQ =
-  window.AQ_AdultScale__TimeLineVariables ||
-  window.AQ_AdultScale_TimeLineVariables;
+    const EMOJI =
+      window.EmojiUse_TimeLineVariables ||
+      window.EmojiUse_TimeLineVariable ||
+      null;
 
-const EMOJI =
-  window.EmojiUse_TimeLineVariables ||
-  window.EmojiUse_TimeLineVariable;
+    // 如果题库没拿到，直接把原因显示在屏幕上（不白屏）
+    if (!Array.isArray(AQ)) {
+      screen.innerHTML =
+        "<div class='card'><div class='err'>找不到 AQ 题库变量。<br>" +
+        "请确认：<br>1）index.html 和 questionnaire.js 在同一个文件夹<br>" +
+        "2）文件名大小写完全一致（questionnaire.js）<br>" +
+        "3）直接打开这个地址看看是否能看到代码：<br>" +
+        "<span class='muted'>.../AQscale/questionnaire.js</span></div></div>";
+      throw new Error("AQ bank missing");
+    }
+    if (!Array.isArray(EMOJI)) {
+      screen.innerHTML =
+        "<div class='card'><div class='err'>找不到 Emoji 题库变量。请确认 questionnaire.js 里保留了 EmojiUse_TimeLineVariables。</div></div>";
+      throw new Error("Emoji bank missing");
+    }
 
-if(!AQ || !Array.isArray(AQ)){
-  document.getElementById("screen").innerHTML =
-  "<div class='error'>找不到 AQ 题库</div>";
-  throw "AQ missing";
-}
-if(!EMOJI || !Array.isArray(EMOJI)){
-  document.getElementById("screen").innerHTML =
-  "<div class='error'>找不到 Emoji 题库</div>";
-  throw "Emoji missing";
-}
+    // ====== 问卷逻辑（超简版：点选项直接下一题） ======
+    const trials = [
+      ...AQ.map(x => ({...x, _scale:"AQ"})),
+      ...EMOJI.map(x => ({...x, _scale:"Emoji"}))
+    ];
 
-// ========= 合并题目（不打乱） =========
-const allTrials = [
-  ...AQ.map(q=>({...q,scale:"AQ"})),
-  ...EMOJI.map(q=>({...q,scale:"Emoji"}))
-];
+    let pid = "";
+    let idx = 0;
+    let t0 = 0;
+    const rows = []; // 每题一行
 
-let index = 0;
-let pid = "";
-let data = [];
-let t0 = 0;
+    function nowISO(){ return new Date().toISOString(); }
 
-// ========= CSV 下载 =========
-function downloadCSV(){
-  let header="pid,scale,itemID,question,response,score,rt\n";
-  let rows = data.map(d =>
-    [pid,d.scale,d.id,d.q,d.resp,d.score,d.rt]
-    .map(x=>`"${x}"`).join(",")
-  ).join("\n");
+    function csvEscape(s){
+      s = (s === undefined || s === null) ? "" : String(s);
+      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+      return s;
+    }
 
-  let blob = new Blob([header+rows],{type:"text/csv"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = pid+".csv";
-  a.click();
-}
+    function buildCSV(){
+      const header = ["pid","scale","itemID","type","question","response","score","rt_ms","ts"];
+      const lines = [header.join(",")];
+      for(const r of rows){
+        lines.push([
+          r.pid, r.scale, r.itemID, r.type, r.question, r.response, r.score, r.rt_ms, r.ts
+        ].map(csvEscape).join(","));
+      }
+      return lines.join("\n");
+    }
 
-// ========= 开始页 =========
-function showPID(){
-  screen.innerHTML=`
-  <div class="card">
-    <div class="question">请输入被试编号</div>
-    <input id="pidInput" style="padding:10px">
-    <br><br>
-    <button onclick="start()">开始</button>
-  </div>`;
-}
+    function downloadCSV(){
+      const text = buildCSV();
+      const blob = new Blob([text], {type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date();
+      const pad = (n)=>String(n).padStart(2,"0");
+      const name = pid + "_" +
+        stamp.getFullYear() + pad(stamp.getMonth()+1) + pad(stamp.getDate()) + "_" +
+        pad(stamp.getHours()) + pad(stamp.getMinutes()) + pad(stamp.getSeconds()) +
+        ".csv";
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      return name;
+    }
 
-function start(){
-  pid=document.getElementById("pidInput").value.trim();
-  if(!pid){alert("请输入编号");return;}
-  nextTrial();
-}
+    function showPID(){
+      screen.innerHTML = `
+        <div class="card">
+          <div class="q">请输入被试编号</div>
+          <div class="row">
+            <input id="pidInput" type="text" placeholder="PID">
+            <button id="startBtn">开始</button>
+          </div>
+          <div class="err" id="err"></div>
+          <div class="muted" style="margin-top:10px;">请确保网络正常；完成后在最后一页下载CSV并发送给主试。</div>
+        </div>`;
+      document.getElementById("startBtn").onclick = () => {
+        const v = document.getElementById("pidInput").value.trim();
+        if(!v){ document.getElementById("err").textContent = "编号不能为空"; return; }
+        pid = v;
+        idx = 0;
+        rows.length = 0;
+        next();
+      };
+    }
 
-// ========= 显示题目 =========
-function nextTrial(){
-  if(index>=allTrials.length){
-    finish();
-    return;
-  }
+    function getOptions(item){
+      // Emoji 两题自带 OP1..OP5 文本；AQ 用默认四选项
+      const ops = [];
+      for(let k=1;k<=6;k++){
+        const key = "OP"+k;
+        if(item[key] !== undefined) ops.push({key, text:item[key]});
+      }
+      if(ops.length) return ops;
+      return [
+        {key:"OP1", text:"完全同意"},
+        {key:"OP2", text:"少许同意"},
+        {key:"OP3", text:"少许不同意"},
+        {key:"OP4", text:"完全不同意"}
+      ];
+    }
 
-  let q = allTrials[index];
-  t0 = performance.now();
+    function scoreOf(item, opKey){
+      const v = item[opKey+"Score"];
+      return (v === undefined || v === null) ? "" : String(v);
+    }
 
-  let options = q.OP1 ? [
-    ["OP1",q.OP1],["OP2",q.OP2],
-    ["OP3",q.OP3],["OP4",q.OP4],
-    q.OP5?["OP5",q.OP5]:null
-  ].filter(x=>x) :
-  [
-    ["OP1","完全同意"],
-    ["OP2","少许同意"],
-    ["OP3","少许不同意"],
-    ["OP4","完全不同意"]
-  ];
+    function next(){
+      if(idx >= trials.length){
+        finish();
+        return;
+      }
+      const item = trials[idx];
+      const ops = getOptions(item);
+      t0 = performance.now();
 
-  screen.innerHTML=`
-  <div class="card">
-    <div class="question">${q.Question}</div>
-    ${options.map(o=>`
-      <div class="option" onclick="answer('${o[0]}')">
-        ${o[1]}
-      </div>
-    `).join("")}
-  </div>`;
-}
+      screen.innerHTML = `
+        <div class="card">
+          <div class="q">${item.Question || ""}</div>
+          ${ops.map(o=>`<div class="opt" data-key="${o.key}">${o.text}</div>`).join("")}
+        </div>
+      `;
 
-// ========= 记录反应 =========
-function answer(op){
-  let q = allTrials[index];
-  let rt = Math.round(performance.now()-t0);
-  let score = q[op+"Score"] || "";
+      const optEls = screen.querySelectorAll(".opt");
+      optEls.forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const opKey = el.getAttribute("data-key");
+          const rt = Math.round(performance.now() - t0);
 
-  data.push({
-    scale:q.scale,
-    id:q.ItemID,
-    q:q.Question,
-    resp:op,
-    score:score,
-    rt:rt
-  });
+          rows.push({
+            pid,
+            scale: item._scale,            // 数据里保留 AQ/Emoji；界面不显示“AQ”
+            itemID: item.ItemID || "",
+            type: item.Type || "",
+            question: item.Question || "",
+            response: opKey,
+            score: scoreOf(item, opKey),
+            rt_ms: String(rt),
+            ts: nowISO()
+          });
 
-  index++;
-  nextTrial();
-}
+          idx += 1;
+          next();
+        });
+      });
+    }
 
-// ========= 结束 =========
-function finish(){
-  downloadCSV();
-  screen.innerHTML=`
-  <div class="card">
-    <div class="question">问卷完成</div>
-    <p>CSV 文件已自动保存</p>
-    <p>请将文件发送给主试</p>
-    <button onclick="downloadCSV()">重新下载</button>
-  </div>`;
-}
+    function finish(){
+      screen.innerHTML = `
+        <div class="card">
+          <div class="q">问卷已完成</div>
+          <div class="muted">
+            请点击下方按钮下载CSV文件，并将文件发送给主试。
+          </div>
+          <div class="row" style="margin-top:16px;">
+            <button id="dlBtn">下载CSV</button>
+            <button class="secondary" id="dlBtn2">重新下载</button>
+          </div>
+          <div class="muted" id="fname" style="margin-top:10px;"></div>
+        </div>
+      `;
+      const doDl = () => {
+        const name = downloadCSV();
+        document.getElementById("fname").textContent = "已生成文件：" + name + "（通常在下载/Downloads文件夹）";
+      };
+      document.getElementById("dlBtn").onclick = doDl;
+      document.getElementById("dlBtn2").onclick = doDl;
+    }
 
-// ========= 启动 =========
-const screen = document.getElementById("screen");
-showPID();
-
-</script>
-
+    // 启动
+    showPID();
+  </script>
 </body>
 </html>
