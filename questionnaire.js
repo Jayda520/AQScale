@@ -1,369 +1,71 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>问卷</title>
-  <style>
-    body{
-      margin:0; background:#ffffff;
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
-      color:#111;
-    }
-    .wrap{
-      min-height: 100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      box-sizing:border-box;
-    }
-    .card{
-      width: min(900px, 92vw);
-      padding: 24px 18px;
-      box-sizing:border-box;
-      text-align:center;
-    }
-    .q{
-      font-size: 22px;
-      line-height: 1.8;
-      margin: 10px 0 18px;
-    }
-    .opts{
-      display:grid;
-      gap: 12px;
-      width: min(680px, 92vw);
-      margin: 0 auto;
-      text-align:left;
-    }
-    label.opt{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      border: 1px solid #e6e6e6;
-      padding: 14px 14px;
-      border-radius: 14px;
-      cursor:pointer;
-      user-select:none;
-      font-size: 16px;
-    }
-    label.opt:hover{ border-color:#cfcfcf; }
-    .btnrow{
-      margin-top: 18px;
-      display:flex;
-      gap: 10px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-    button{
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 12px;
-      background:#111827;
-      color:#fff;
-      cursor:pointer;
-      font-size: 14px;
-    }
-    button.secondary{
-      background:#f3f4f6;
-      color:#111;
-      border: 1px solid #e5e7eb;
-    }
-    button:disabled{ opacity:.45; cursor:not-allowed; }
-    input[type="text"]{
-      padding: 10px 12px;
-      border:1px solid #ddd;
-      border-radius: 12px;
-      width: 240px;
-      font-size: 14px;
-      text-align:center;
-    }
-    .muted{ color:#666; font-size:14px; line-height:1.8; }
-    .err{ color:#b91c1c; margin-top: 10px; font-size:14px; }
-    .ok{ color:#15803d; margin-top: 10px; font-size:14px; }
-    .tiny{ color:#888; font-size: 12px; margin-top: 10px; line-height:1.6; }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card" id="screen"></div>
-  </div>
+// questionnaire.js
+// 只保留：AQ量表 + Emoji使用频率两题
+// 为避免变量名不一致导致报错：这里同时提供两种命名（一个下划线/两个下划线）
 
-  <!-- 你的题库脚本：必须包含 AQ_AdultScale__TimeLineVariables 和 EmojiUse_TimeLineVariables -->
-  <script src="questionnaire.js"></script>
+var AQ_AdultScale__TimeLineVariables = [
+  {"ItemID":"1","Type":"social_skill","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我喜欢和别人一起做事多于单独处事"},
+  {"ItemID":"2","Type":"attention_switching","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我较喜欢以相同方式重复做事"},
+  {"ItemID":"3","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"如要想象事情，我觉得在脑海中构想该事情的画面是容易的"},
+  {"ItemID":"4","Type":"attention_switching","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我常常太沉醉于某事情而忽略了其他东西"},
+  {"ItemID":"5","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我常常留意到一些别人不为意的细微声音"},
+  {"ItemID":"6","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我常常留意车牌号码或类似的数列资料"},
+  {"ItemID":"7","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"即使我认为自己的说话很有礼貌，但别人常常告诉我那是很无礼的"},
+  {"ItemID":"8","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"在阅读故事时，我能轻易地想象出角色的模样"},
+  {"ItemID":"9","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我对日期很着迷"},
+  {"ItemID":"10","Type":"attention_switching","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"在社交场合中，我能轻易听懂不同人的对话"},
+  {"ItemID":"11","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得身处社交场合是轻松自在的事"},
+  {"ItemID":"12","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我倾向留意一些别人不为意的细节"},
+  {"ItemID":"13","Type":"social_skill","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我喜欢去图书馆多于宴会"},
+  {"ItemID":"14","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得虚构故事是容易的"},
+  {"ItemID":"15","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"相对于物件，我对人有更大兴趣"},
+  {"ItemID":"X1","Type":"Polygraph","OP1Score":"0","OP2Score":"0","OP3Score":"0","OP4Score":"1","Question":"此题请选完全不同意"},
+  {"ItemID":"16","Type":"attention_switching","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我容易有强烈的喜好，如不能从事这些喜好，我会感到不开心"},
+  {"ItemID":"17","Type":"communication","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我喜爱与别人闲谈"},
+  {"ItemID":"18","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我说话时别人不容易插嘴"},
+  {"ItemID":"19","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我对数字很着迷"},
+  {"ItemID":"20","Type":"imagination","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"在阅读故事时，我觉得很难明白故事人物的意图"},
+  {"ItemID":"21","Type":"imagination","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我并不特别喜欢阅读小说"},
+  {"ItemID":"22","Type":"social_skill","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我觉得很难结识新朋友"},
+  {"ItemID":"23","Type":"attention_to_detail","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我常常留意事物的规律模式"},
+  {"ItemID":"24","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我喜欢去戏院多于博物馆"},
+  {"ItemID":"25","Type":"attention_switching","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"如我的日常生活程序被扰乱，我不会感到不开心"},
+  {"ItemID":"26","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我不懂得怎样持续一段对话"},
+  {"ItemID":"27","Type":"communication","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得理解对方说话的背后含意是容易的"},
+  {"ItemID":"28","Type":"attention_to_detail","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我通常留意事情的整体多于其细节"},
+  {"ItemID":"29","Type":"attention_to_detail","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我不善于牢记电话号码"},
+  {"ItemID":"30","Type":"attention_to_detail","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我很少留意身处境地或别人外表的细微转变"},
+  {"ItemID":"31","Type":"communication","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"如别人对我的说话感到厌烦，我会知道"},
+  {"ItemID":"32","Type":"attention_switching","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得同时处理不同的事情是容易的"},
+  {"ItemID":"X2","Type":"Polygraph","OP1Score":"1","OP2Score":"0","OP3Score":"0","OP4Score":"0","Question":"此题请选完全同意"},
+  {"ItemID":"33","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"在电话对谈中，我不肯定应该何时发言"},
+  {"ItemID":"34","Type":"attention_switching","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我喜爱自发地做事"},
+  {"ItemID":"35","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我常常是最后一个才明白笑话意思的人"},
+  {"ItemID":"36","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得从察看别人表情去了解他们的想法或感受是容易的"},
+  {"ItemID":"37","Type":"attention_switching","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"若正进行的活动被打断，我可以很快恢复进行该事情"},
+  {"ItemID":"38","Type":"communication","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我善于与别人闲谈"},
+  {"ItemID":"39","Type":"communication","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"别人常常告知我，我不断重复做或说同一件事情"},
+  {"ItemID":"40","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"当我较年幼时，我喜欢和小朋友玩假装游戏"},
+  {"ItemID":"41","Type":"imagination","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我喜欢收集某个种类的资料(如车类、雀鸟类、火车类、植物类等)"},
+  {"ItemID":"42","Type":"imagination","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我很难想象自己成为别人会是怎样的"},
+  {"ItemID":"43","Type":"attention_switching","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我喜欢仔细计划自己参与的每一项活动"},
+  {"ItemID":"44","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我喜欢社交场合"},
+  {"ItemID":"45","Type":"social_skill","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"我觉得理解别人意图是困难的"},
+  {"ItemID":"46","Type":"attention_switching","OP1Score":"1","OP2Score":"1","OP3Score":"0","OP4Score":"0","Question":"新环境令我紧张"},
+  {"ItemID":"47","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我喜欢认识新朋友"},
+  {"ItemID":"48","Type":"social_skill","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我是个善于交际的人"},
+  {"ItemID":"49","Type":"attention_to_detail","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我不善于牢记别人的出生日期"},
+  {"ItemID":"50","Type":"imagination","OP1Score":"0","OP2Score":"0","OP3Score":"1","OP4Score":"1","Question":"我觉得和小朋友玩假装游戏是容易的"}
+];
 
-  <script>
-    function $(id){ return document.getElementById(id); }
-    function nowISO(){ return new Date().toISOString(); }
-    function safeStr(x){ return (x===undefined || x===null) ? "" : String(x); }
+var EmojiUse_TimeLineVariables = [
+  {"ItemID":"1","OP1":"从不","OP2":"偶尔","OP3":"有时","OP4":"经常","OP5":"总是",
+    "OP1Score":"1","OP2Score":"2","OP3Score":"3","OP4Score":"4","OP5Score":"5",
+    "Question":"你平时在网络和生活中，有多大频率接触到Emoji（系统自带表情图，黄色小圆脸符号）？"},
+  {"ItemID":"2","OP1":"从不","OP2":"偶尔","OP3":"有时","OP4":"经常","OP5":"总是",
+    "OP1Score":"1","OP2Score":"2","OP3Score":"3","OP4Score":"4","OP5Score":"5",
+    "Question":"你平时在网络和生活中，有多大频率使用Emoji（系统自带表情图，黄色小圆脸符号）？"}
+];
 
-    // AQ 默认选项（你的 AQ 题库没写 OP1/OP2 文本，所以这里补上）
-    const AQ_DEFAULT_OPTIONS = [
-      { key:"OP1", text:"完全同意" },
-      { key:"OP2", text:"少许同意" },
-      { key:"OP3", text:"少许不同意" },
-      { key:"OP4", text:"完全不同意" }
-    ];
-
-    function extractOptions(item){
-      // 若题库自带 OP1/OP2... 文本就用题库；否则用 AQ 默认四选项
-      const ops = [];
-      for (let k=1; k<=6; k++){
-        const key = "OP"+k;
-        if (item[key] !== undefined) ops.push({ key, text: item[key] });
-      }
-      return ops.length ? ops : AQ_DEFAULT_OPTIONS;
-    }
-
-    function scoreOf(item, opKey){
-      const s = item[opKey + "Score"];
-      if (s === undefined) return "";
-      const n = Number(s);
-      return Number.isFinite(n) ? String(n) : "";
-    }
-
-    // CSV 工具：转义字段（处理逗号/引号/换行）
-    function csvEscape(value){
-      const s = safeStr(value);
-      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
-      return s;
-    }
-
-    // 生成文件名：pid_YYYYMMDD_HHMMSS.csv
-    function makeCSVFileName(pid){
-      const d = new Date();
-      const pad = (n)=> String(n).padStart(2,"0");
-      const stamp = d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + "_" +
-                    pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
-      return `${pid}_${stamp}.csv`;
-    }
-
-    function downloadText(text, filename, mime){
-      const blob = new Blob([text], {type: mime || "text/plain;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 1000);
-    }
-
-    function buildTrialsCSV(meta, trials){
-      // ✅ 每个 trial 一行：多少题 = 多少行
-      // 你需要哪些列可以再加。这里给常用最稳的：
-      const header = [
-        "pid","scale","itemID","type","question",
-        "response","responseText","score","rt_ms","ts",
-        "startTime","endTime","userAgent","page"
-      ];
-
-      const lines = [];
-      lines.push(header.join(","));
-
-      for(const r of trials){
-        const row = [
-          meta.pid,
-          r.scale,
-          r.itemID,
-          r.type,
-          r.question,
-          r.response,
-          r.responseText,
-          r.score,
-          r.rt_ms,
-          r.ts,
-          meta.startTime,
-          meta.endTime,
-          meta.ua,
-          meta.page
-        ].map(csvEscape).join(",");
-        lines.push(row);
-      }
-      return lines.join("\n");
-    }
-
-    class Runner{
-      constructor(screenEl){
-        this.el = screenEl;
-        this.blocks = [];
-        this.blockIndex = 0;
-        this.itemIndex = 0;
-        this.itemStartMs = 0;
-        this.records = [];
-        this.meta = {
-          startTime: nowISO(),
-          endTime: "",
-          pid: "",
-          ua: navigator.userAgent,
-          page: location.href
-        };
-      }
-
-      setBlocks(blocks){ this.blocks = blocks; }
-
-      welcome(){
-        // 不显示 AQ 字样，页面就写“请输入编号”
-        this.el.innerHTML = `
-          <div class="q">请输入被试编号</div>
-          <div class="btnrow">
-            <input id="pid" type="text" placeholder="PID" />
-            <button id="startBtn">开始</button>
-          </div>
-          <div class="err" id="err"></div>
-        `;
-        $("startBtn").onclick = () => {
-          const pid = $("pid").value.trim();
-          if(!pid){ $("err").textContent = "编号不能为空"; return; }
-          this.meta.pid = pid;
-          this.start();
-        };
-      }
-
-      start(){
-        this.blockIndex = 0;
-        this.itemIndex = 0;
-        this.records = [];
-        this.renderItem();
-      }
-
-      renderItem(){
-        const block = this.blocks[this.blockIndex];
-        if(!block){ this.finish(); return; }
-
-        const items = block.items;
-        const item = items[this.itemIndex];
-
-        if(!item){
-          this.blockIndex += 1;
-          this.itemIndex = 0;
-          this.renderItem();
-          return;
-        }
-
-        const opts = extractOptions(item);
-        this.itemStartMs = performance.now();
-
-        // ✅ 不显示“AQ”、不显示提示语；题目居中
-        this.el.innerHTML = `
-          <div class="q">${safeStr(item.Question)}</div>
-          <div class="opts">
-            ${opts.map(o=>`
-              <label class="opt">
-                <input type="radio" name="ans" value="${o.key}" />
-                <span>${o.text}</span>
-              </label>
-            `).join("")}
-          </div>
-          <div class="err" id="err"></div>
-        `;
-
-        const radios = this.el.querySelectorAll('input[name="ans"]');
-        radios.forEach(r=>r.addEventListener("change", ()=>{
-          // 选了就直接下一题（更“问卷化”，也更省事）
-          this.commitAndNext(r.value, opts);
-        }));
-      }
-
-      commitAndNext(opKey, opts){
-        const block = this.blocks[this.blockIndex];
-        const item = block.items[this.itemIndex];
-
-        const rt = Math.round(performance.now() - this.itemStartMs);
-        const optionText = (opts.find(x=>x.key===opKey)||{}).text || "";
-
-        this.records.push({
-          scale: block.dataLabel,            // 数据里可以留 AQ/EmojiUse，但屏幕不显示
-          itemID: safeStr(item.ItemID),
-          type: safeStr(item.Type),
-          question: safeStr(item.Question),
-          response: opKey,
-          responseText: optionText,
-          score: scoreOf(item, opKey),
-          rt_ms: String(rt),
-          ts: nowISO()
-        });
-
-        this.itemIndex += 1;
-        this.renderItem();
-      }
-
-      finish(){
-        this.meta.endTime = nowISO();
-
-        const csvName = makeCSVFileName(this.meta.pid);
-        const csvText = buildTrialsCSV(this.meta, this.records);
-
-        // 自动下载
-        try{
-          downloadText(csvText, csvName, "text/csv;charset=utf-8");
-        }catch(e){
-          console.error(e);
-        }
-
-        // ✅ 最后一页：让被试把文件发给主试（你要求的）
-        this.el.innerHTML = `
-          <div class="q">问卷已完成</div>
-          <div class="muted">
-            数据文件已自动保存为 <b>${csvName}</b>（通常在“下载/Downloads”文件夹）。<br>
-            请将该文件发送给主试（如通过微信/邮件/QQ）完成提交。
-          </div>
-
-          <div class="btnrow">
-            <button id="dlBtn">如果没有下载，点这里重新保存</button>
-            <button class="secondary" id="copyBtn">复制文件名</button>
-          </div>
-
-          <div class="ok" id="ok"></div>
-          <div class="err" id="err"></div>
-          <div class="tiny">
-            如果浏览器提示“阻止自动下载”，请选择“允许”。<br>
-            仍找不到文件时：打开浏览器的“下载记录”查看保存位置。
-          </div>
-        `;
-
-        $("dlBtn").onclick = () => {
-          try{
-            downloadText(csvText, csvName, "text/csv;charset=utf-8");
-            $("ok").textContent = "已重新触发保存";
-          }catch(e){
-            console.error(e);
-            $("err").textContent = "保存失败：" + (e && e.message ? e.message : String(e));
-          }
-        };
-
-        $("copyBtn").onclick = async () => {
-          try{
-            await navigator.clipboard.writeText(csvName);
-            $("ok").textContent = "已复制文件名";
-          }catch(e){
-            $("err").textContent = "复制失败（可能浏览器不允许剪贴板）";
-          }
-        };
-
-        console.log("CSV_NAME", csvName);
-        console.log("TRIALS", this.records);
-      }
-    }
-
-    (function(){
-      if (!Array.isArray(window.AQ_AdultScale__TimeLineVariables)) {
-        $("screen").innerHTML = "<div class='err'>找不到 AQ_AdultScale__TimeLineVariables（请检查 questionnaire.js）</div>";
-        return;
-      }
-      if (!Array.isArray(window.EmojiUse_TimeLineVariables)) {
-        $("screen").innerHTML = "<div class='err'>找不到 EmojiUse_TimeLineVariables（请检查 questionnaire.js）</div>";
-        return;
-      }
-
-      const runner = new Runner($("screen"));
-      runner.setBlocks([
-        { name: "Section1", dataLabel: "AQ",       items: window.AQ_AdultScale__TimeLineVariables },
-        { name: "Section2", dataLabel: "EmojiUse", items: window.EmojiUse_TimeLineVariables }
-      ]);
-      runner.welcome();
-    })();
-  </script>
-</body>
-</html>
+// 变量名别名（防止你 HTML 里检查的是另一个命名）
+var AQ_AdultScale_TimeLineVariables = AQ_AdultScale__TimeLineVariables;
+var EmojiUse_TimeLineVariable = EmojiUse_TimeLineVariables;
