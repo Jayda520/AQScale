@@ -344,4 +344,31 @@
     (function(){
       // ✅ 变量名兜底：不管你之前是一个下划线还是两个下划线，都能找到
       const AQ_BANK =
-        window.AQ_AdultSc_
+        window.AQ_AdultScale__TimeLineVariables ||
+        window.AQ_AdultScale_TimeLineVariables ||
+        null;
+
+      const EMOJI_BANK =
+        window.EmojiUse_TimeLineVariables ||
+        window.EmojiUse_TimeLineVariable ||
+        null;
+
+      if (!Array.isArray(AQ_BANK)) {
+        $("screen").innerHTML = "<div class='err'>错误：找不到 AQ 题库变量（请确认 questionnaire.js 与 index.html 同目录且能被加载）。</div>";
+        return;
+      }
+      if (!Array.isArray(EMOJI_BANK)) {
+        $("screen").innerHTML = "<div class='err'>错误：找不到 Emoji 题库变量（请确认 questionnaire.js 能被加载）。</div>";
+        return;
+      }
+
+      const runner = new Runner($("screen"));
+      runner.setBlocks([
+        { dataLabel: "AQ",       items: AQ_BANK },
+        { dataLabel: "EmojiUse", items: EMOJI_BANK }
+      ]);
+      runner.welcome();
+    })();
+  </script>
+</body>
+</html>
