@@ -28,18 +28,39 @@
       line-height:1.8;
       margin: 8px 0 18px;
     }
+
+    /* ✅ 选项横排容器（自动换行） */
+    .opt-row{
+      width:min(760px, 96vw);
+      margin:10px auto 0;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px 14px;
+      justify-content:center; /* 想左对齐：flex-start */
+      align-items:stretch;
+    }
+
+    /* ✅ 选项变成横排“胶囊按钮” */
     .opt{
-      width:min(640px, 92vw);
-      margin:10px auto;
-      padding:14px 14px;
+      flex: 0 1 auto;
+      min-width: 140px;
+      max-width: 100%;
+      padding: 12px 16px;
       border:1px solid #e5e5e5;
-      border-radius:14px;
+      border-radius: 999px;
       cursor:pointer;
-      text-align:left;
+      text-align:center;
       font-size:16px;
       user-select:none;
+      background:#fff;
     }
     .opt:hover{ border-color:#cfcfcf; background:#fafafa; }
+
+    @media (max-width: 520px){
+      .opt{ min-width: 120px; font-size:15px; padding:10px 12px; }
+      .q{ font-size:20px; }
+    }
+
     .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
     input[type="text"]{
       padding:10px 12px; border:1px solid #ddd; border-radius:12px;
@@ -204,7 +225,9 @@
       screen.innerHTML = `
         <div class="card">
           <div class="q">${item.Question || ""}</div>
-          ${ops.map(o=>`<div class="opt" data-key="${o.key}">${o.text}</div>`).join("")}
+          <div class="opt-row">
+            ${ops.map(o=>`<div class="opt" data-key="${o.key}">${o.text}</div>`).join("")}
+          </div>
         </div>
       `;
 
@@ -216,7 +239,7 @@
 
           rows.push({
             pid,
-            scale: item._scale,            // 数据里保留 AQ/Emoji；界面不显示“AQ”
+            scale: item._scale,
             itemID: item.ItemID || "",
             type: item.Type || "",
             question: item.Question || "",
