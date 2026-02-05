@@ -29,21 +29,21 @@
       margin: 8px 0 18px;
     }
 
-    /* ✅ 选项横排容器（自动换行） */
+    /* ✅ 横排选项容器（默认自动换行） */
     .opt-row{
       width:min(760px, 96vw);
       margin:10px auto 0;
       display:flex;
       flex-wrap:wrap;
       gap:12px 14px;
-      justify-content:center; /* 想左对齐：flex-start */
+      justify-content:center;
       align-items:stretch;
     }
 
-    /* ✅ 选项变成横排“胶囊按钮” */
+    /* ✅ 选项按钮（横排胶囊） */
     .opt{
       flex: 0 1 auto;
-      min-width: 140px;
+      min-width: 110px;       /* ✅ 让 5 个更容易一排 */
       max-width: 100%;
       padding: 12px 16px;
       border:1px solid #e5e5e5;
@@ -53,12 +53,26 @@
       font-size:16px;
       user-select:none;
       background:#fff;
+      box-sizing:border-box;
     }
     .opt:hover{ border-color:#cfcfcf; background:#fafafa; }
 
+    /* ✅ 只有5点量表：强制五个一排（不换行） */
+    .opt-row.five{
+      flex-wrap: nowrap;
+      gap: 12px;
+    }
+    .opt-row.five .opt{
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 12px 10px;
+      font-size: 16px;
+    }
+
     @media (max-width: 520px){
-      .opt{ min-width: 120px; font-size:15px; padding:10px 12px; }
       .q{ font-size:20px; }
+      .opt{ font-size:15px; padding:10px 12px; min-width: 100px; }
+      .opt-row.five .opt{ font-size:14px; padding:10px 8px; }
     }
 
     .row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
@@ -80,7 +94,7 @@
 <body>
   <div id="screen"></div>
 
-  <!-- ✅ 强制刷新缓存：v=1 你之后每次改文件把 1 改成 2/3/4 -->
+  <!-- ✅ 强制刷新缓存：你每次改 questionnaire.js 都把 v=1 改成 v=2/3/4 -->
   <script src="questionnaire.js?v=1"></script>
 
   <script>
@@ -105,14 +119,11 @@
       window.EmojiUse_TimeLineVariable ||
       null;
 
-    // 如果题库没拿到，直接把原因显示在屏幕上（不白屏）
     if (!Array.isArray(AQ)) {
       screen.innerHTML =
         "<div class='card'><div class='err'>找不到 AQ 题库变量。<br>" +
         "请确认：<br>1）index.html 和 questionnaire.js 在同一个文件夹<br>" +
-        "2）文件名大小写完全一致（questionnaire.js）<br>" +
-        "3）直接打开这个地址看看是否能看到代码：<br>" +
-        "<span class='muted'>.../AQscale/questionnaire.js</span></div></div>";
+        "2）文件名大小写完全一致（questionnaire.js）</div></div>";
       throw new Error("AQ bank missing");
     }
     if (!Array.isArray(EMOJI)) {
@@ -121,7 +132,7 @@
       throw new Error("Emoji bank missing");
     }
 
-    // ====== 问卷逻辑（超简版：点选项直接下一题） ======
+    // ✅ 不随机：严格按你题库数组顺序呈现
     const trials = [
       ...AQ.map(x => ({...x, _scale:"AQ"})),
       ...EMOJI.map(x => ({...x, _scale:"Emoji"}))
@@ -130,7 +141,7 @@
     let pid = "";
     let idx = 0;
     let t0 = 0;
-    const rows = []; // 每题一行
+    const rows = [];
 
     function nowISO(){ return new Date().toISOString(); }
 
@@ -180,7 +191,7 @@
             <button id="startBtn">开始</button>
           </div>
           <div class="err" id="err"></div>
-          <div class="muted" style="margin-top:10px;">请确保网络正常；完成后在最后一页下载CSV并发送给主试。</div>
+          <div class="muted" style="margin-top:10px;">完成后在最后一页下载CSV并发送给主试。</div>
         </div>`;
       document.getElementById("startBtn").onclick = () => {
         const v = document.getElementById("pidInput").value.trim();
@@ -193,14 +204,13 @@
     }
 
     function getOptions(item){
-      // Emoji 两题自带 OP1..OP5 文本；AQ 用默认四选项
       const ops = [];
       for(let k=1;k<=6;k++){
         const key = "OP"+k;
         if(item[key] !== undefined) ops.push({key, text:item[key]});
       }
-      if(ops.length) return ops;
-      return [
+      if(ops.length) return ops; // Emoji：OP1..OP5
+      return [                 // AQ：固定四选项（顺序不变）
         {key:"OP1", text:"完全同意"},
         {key:"OP2", text:"少许同意"},
         {key:"OP3", text:"少许不同意"},
@@ -222,10 +232,11 @@
       const ops = getOptions(item);
       t0 = performance.now();
 
+      const isFive = (ops.length === 5); // ✅ 5个选项：强制一排
       screen.innerHTML = `
         <div class="card">
           <div class="q">${item.Question || ""}</div>
-          <div class="opt-row">
+          <div class="opt-row ${isFive ? "five" : ""}">
             ${ops.map(o=>`<div class="opt" data-key="${o.key}">${o.text}</div>`).join("")}
           </div>
         </div>
@@ -259,9 +270,7 @@
       screen.innerHTML = `
         <div class="card">
           <div class="q">问卷已完成</div>
-          <div class="muted">
-            请点击下方按钮下载CSV文件，并将文件发送给主试。
-          </div>
+          <div class="muted">请点击下方按钮下载CSV文件，并将文件发送给主试。</div>
           <div class="row" style="margin-top:16px;">
             <button id="dlBtn">下载CSV</button>
             <button class="secondary" id="dlBtn2">重新下载</button>
@@ -277,7 +286,6 @@
       document.getElementById("dlBtn2").onclick = doDl;
     }
 
-    // 启动
     showPID();
   </script>
 </body>
